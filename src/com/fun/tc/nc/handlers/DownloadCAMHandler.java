@@ -10,14 +10,11 @@ import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
-import com.fun.tc.nc.until.MyRacDatasetFile;
 import com.fun.tc.nc.until.RacDatasetUtil;
-import com.teamcenter.rac.aif.kernel.AIFComponentContext;
 import com.teamcenter.rac.aif.kernel.InterfaceAIFComponent;
 import com.teamcenter.rac.aifrcp.AIFUtility;
 import com.teamcenter.rac.kernel.TCComponent;
 import com.teamcenter.rac.kernel.TCComponentDataset;
-import com.teamcenter.rac.kernel.TCComponentTcFile;
 import com.teamcenter.rac.util.MessageBox;
 
 public class DownloadCAMHandler extends AbstractHandler{

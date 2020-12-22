@@ -3,14 +3,10 @@ package com.fun.tc.nc.handlers;
 import java.io.File;
 import java.util.List;
 
-import javax.swing.JOptionPane;
-
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.MessageBox;
@@ -35,7 +31,7 @@ public class UploadingCAMHandler extends AbstractHandler{
 		InterfaceAIFComponent aifcomp = AIFUtility.getCurrentApplication().getTargetComponent();
 		final TCComponent comp  = (TCComponent) aifcomp;
 		String type = aifcomp.getType();
-		Object[] options = {"覆盖","不覆盖"};
+//		Object[] options = {"覆盖","不覆盖"};
 		if(type.equals("AE8Operation Revision")) {	
 			Display display = Display.getDefault();	
 			parent = new Shell(display,SWT.SHELL_TRIM);

@@ -4,7 +4,6 @@ import java.io.File;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
-import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
@@ -14,7 +13,6 @@ import com.fun.tc.nc.until.MyDatasetUtil;
 import com.teamcenter.rac.aif.kernel.InterfaceAIFComponent;
 import com.teamcenter.rac.aifrcp.AIFUtility;
 import com.teamcenter.rac.kernel.TCComponent;
-import com.teamcenter.rac.kernel.TCSession;
 import com.teamcenter.rac.util.MessageBox;
 
 public class UploadingReportHandler extends AbstractHandler{
