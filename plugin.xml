@@ -9,7 +9,7 @@
             id="com.fun.tc.nc.commands.CreateCAM">
       </command>
       <command
-            name="创建数控程工艺"
+            name="创建数控工艺"
             id="com.fun.tc.nc.commands.CreateCAE">
       </command>
       <command
@@ -116,16 +116,6 @@
                   id="com.fun.tc.nc.commands.CreateCAE"
                   mnemonic="S">
             </command>
-             <command
-                  commandId="com.fun.tc.nc.commands.ReviseCAE"
-                  id="com.fun.tc.nc.commands.ReviseCAE"
-                  mnemonic="S">
-            </command>
-            <command
-                  commandId="com.fun.tc.nc.commands.DownloadCAM"
-                  id="com.fun.tc.nc.commands.DownloadCAM"
-                  mnemonic="S">
-            </command>
             <command
                   commandId="com.fun.tc.nc.commands.UploadingCAM"
                   id="com.fun.tc.nc.commands.UploadingCAM"
@@ -134,6 +124,16 @@
              <command
                   commandId="com.fun.tc.nc.commands.UploadingReport"
                   id="com.fun.tc.nc.commands.UploadingReport"
+                  mnemonic="S">
+            </command>
+            <command
+                  commandId="com.fun.tc.nc.commands.DownloadCAM"
+                  id="com.fun.tc.nc.commands.DownloadCAM"
+                  mnemonic="S">
+            </command>
+            <command
+                  commandId="com.fun.tc.nc.commands.ReviseCAE"
+                  id="com.fun.tc.nc.commands.ReviseCAE"
                   mnemonic="S">
             </command>
          </menu>

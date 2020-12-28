@@ -10,15 +10,11 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import com.teamcenter.rac.aif.AbstractAIFDialog;
+import com.teamcenter.rac.aif.kernel.AIFComponentContext;
 import com.teamcenter.rac.aifrcp.AIFUtility;
 import com.teamcenter.rac.kernel.TCComponent;
-import com.teamcenter.rac.kernel.TCComponentBOMLine;
-import com.teamcenter.rac.kernel.TCComponentBOMWindow;
-import com.teamcenter.rac.kernel.TCComponentBOMWindowType;
-import com.teamcenter.rac.kernel.TCComponentItem;
+import com.teamcenter.rac.kernel.TCComponentBOPLine;
 import com.teamcenter.rac.kernel.TCComponentItemRevision;
-import com.teamcenter.rac.kernel.TCComponentItemType;
-import com.teamcenter.rac.kernel.TCComponentRevisionRule;
 import com.teamcenter.rac.kernel.TCException;
 import com.teamcenter.rac.kernel.TCSession;
 import com.teamcenter.rac.util.MessageBox;
@@ -42,26 +38,36 @@ public class ReviseCAMDialog extends AbstractAIFDialog implements ActionListener
 
 	private JButton assignButton;
 	
-	TCComponentItemType itemType;
-
 	TCSession session;
 	
-	public ReviseCAMDialog(TCComponentItemRevision processRev) throws TCException {
+	String relationName = "AE8RelNC";
+
+	private TCComponentItemRevision relationRev;
+	
+	TCComponentBOPLine line;
+	
+	TCComponentBOPLine top;
+	
+	public ReviseCAMDialog(TCComponentBOPLine line, TCComponentBOPLine top) throws TCException {
 		super(AIFUtility.getActiveDesktop());
-		setTitle("新建数控程序集");
-		this.processRev = processRev;
+		setTitle("TC-CAPP数控工序修订");
+		this.processRev = line.getItemRevision();
 		session = processRev.getSession();
-		itemType = (TCComponentItemType) session.getTypeComponent("MEProcess");
-		String name = processRev.getProperty("object_name");
+		this.line = line;
+		this.top = top;
 		JPanel propertyPanel = new JPanel();
 		propertyPanel.setLayout(new PropertyLayout());
-		propertyPanel.add("1.1.center.center", new JLabel("ID/版本.名称："));
+		propertyPanel.add("1.1.center.center", new JLabel("数控工序ID/版本.名称："));
 		JPanel createPanel = new JPanel();
-		idText = new JTextField(10);
+		idText = new JTextField(14);
+		idText.setText(processRev.getProperty("item_id"));
+		idText.setEditable(false);
 		revText = new JTextField(2);
-		nameText = new JTextField(12);
-		nameText.setText(name + "数控程序集");
-		nameText.setEnabled(false);
+		revText.setEditable(false);
+		revText.setText(processRev.getItem().getNewRev());
+		nameText = new JTextField(18);
+		nameText.setText(processRev.getProperty("object_name"));
+		nameText.setEditable(false);
 		assignButton = new JButton("指派");
 		assignButton.addActionListener(this);
 		createPanel.add(idText);
@@ -69,20 +75,24 @@ public class ReviseCAMDialog extends AbstractAIFDialog implements ActionListener
 		createPanel.add(revText);
 		createPanel.add(new JLabel("."));
 		createPanel.add(nameText);
-		createPanel.add(assignButton);
+//		createPanel.add(assignButton);
 		propertyPanel.add("1.2.center.center", createPanel);
 		
-		propertyPanel.add("2.1.center.center", new JLabel("关联加工工艺ID/版本.名称："));
+		propertyPanel.add("2.1.center.center", new JLabel("关联机加工序ID/版本.名称："));
 		JPanel relationPanel = new JPanel();
-		JTextField idText = new JTextField(10);
+		JTextField idText = new JTextField(14);
 		idText.setEditable(false);
-		idText.setText(processRev.getProperty("item_id"));
 		JTextField revText = new JTextField(2);
 		revText.setEditable(false);
-		revText.setText(processRev.getProperty("item_revision_id"));
-		JTextField nameText = new JTextField(12);
+		JTextField nameText = new JTextField(18);
 		nameText.setEditable(false);
-		nameText.setText(name);
+		
+		relationRev = getRelation();
+		if (relationRev != null) {
+			idText.setText(relationRev.getProperty("item_id"));
+			revText.setText(relationRev.getProperty("item_revision_id"));
+			nameText.setText(relationRev.getProperty("object_name"));
+		}
 		relationPanel.add(idText);
 		relationPanel.add(new JLabel("/"));
 		relationPanel.add(revText);
@@ -109,21 +119,15 @@ public class ReviseCAMDialog extends AbstractAIFDialog implements ActionListener
 		Object obj = event.getSource();
 		try {
 			if (obj.equals(okButton)) {
-				String id = idText.getText();
 				String revID = revText.getText();
-				if (id.isEmpty() || revID.isEmpty()) {
-					MessageBox.post(this, "请指派ID", "提示", MessageBox.INFORMATION);
-					return;
+				TCComponentItemRevision newRev = processRev.saveAs(revID);
+				if (relationRev != null) {
+					relationRev.add(relationName, newRev);
+					relationRev.remove(relationName, processRev);
 				}
-				TCComponentItem process = itemType.create(id, revID, "MEProcess", nameText.getText(), "", null);
-				TCComponentItemRevision rev = process.getLatestItemRevision();
-				session.getUser().getHomeFolder().add("contents", rev);
-				setSummaryProcess(rev);
-				processRev.add("AE8_ASSONCMEP", rev);
-				
-			} else if (obj.equals(assignButton)) {
-				assign();
-			} else if (obj.equals(closeButton)) {
+				MessageBox.post(this, newRev + "修订成功！", "提示", MessageBox.INFORMATION);
+				dispose();
+			} if (obj.equals(closeButton)) {
 				dispose();
 			}
 		} catch (Exception e) {
@@ -133,43 +137,17 @@ public class ReviseCAMDialog extends AbstractAIFDialog implements ActionListener
 		
 	}
 	
-	public void setSummaryProcess(TCComponentItemRevision rev) throws TCException {
-		TCComponentItemRevision topRev = getTopREvision();
-		if (topRev != null) {
-			rev.setRelated("IMAN_METarget", topRev.getRelatedComponents("IMAN_METarget"));
-			TCComponentRevisionRule rule = new TCComponentRevisionRule();//创建规则
-			TCComponentBOMWindowType type = (TCComponentBOMWindowType) session.getTypeComponent("BOPWindow");//获取BOM窗口类型
-			TCComponentBOMWindow window = type.create(rule);//创建一个BOM窗口
-			TCComponentBOMLine topLine = window.setWindowTopLine(topRev.getItem(),topRev,null,null);//设置顶层BOMLine
-			topLine.addBOMLine(topLine, rev, null);
-		}
-		
-	}
-	
-	public TCComponentItemRevision getTopREvision() throws TCException {
-		TCComponent[] topComs = processRev.whereUsed((short) 0);
+	public TCComponentItemRevision getRelation() throws TCException {
 		TCComponentItemRevision rev = null;
-		if (topComs != null && topComs.length > 0) {
-			TCComponent topCom = topComs[0];
-			if (topCom instanceof TCComponentItem) {
-				rev = ((TCComponentItem) topCom).getLatestItemRevision();
-			} else if (topCom instanceof TCComponentItemRevision) {
-				rev = (TCComponentItemRevision) topCom;
+		AIFComponentContext[] contexts = processRev.getPrimary();
+		for (AIFComponentContext context : contexts) {
+			TCComponent com = (TCComponent) context.getComponent();
+			if (relationName.equals(context.getContext()) && "AE8Operation Revision".equals(com.getType())) {
+				rev = (TCComponentItemRevision) com;
+				break;
 			}
 		}
 		return rev;
 	}
 
-	public void assign() throws TCException {
-		String id = idText.getText();
-		String revID = revText.getText();
-		if (id.isEmpty() && revID.isEmpty()) {
-			id = itemType.getNewID();
-			revID = itemType.getNewRev(null);
-			idText.setText(id);
-			revText.setText(revID);
-			idText.setEditable(false);
-			revText.setEditable(false);
-		}
-	}
 }
