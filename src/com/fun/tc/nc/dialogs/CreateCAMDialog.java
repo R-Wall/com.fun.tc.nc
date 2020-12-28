@@ -11,14 +11,10 @@ import javax.swing.JTextField;
 
 import com.teamcenter.rac.aif.AbstractAIFDialog;
 import com.teamcenter.rac.aifrcp.AIFUtility;
-import com.teamcenter.rac.kernel.TCComponent;
-import com.teamcenter.rac.kernel.TCComponentBOMLine;
-import com.teamcenter.rac.kernel.TCComponentBOMWindow;
-import com.teamcenter.rac.kernel.TCComponentBOMWindowType;
+import com.teamcenter.rac.kernel.TCComponentBOPLine;
 import com.teamcenter.rac.kernel.TCComponentItem;
 import com.teamcenter.rac.kernel.TCComponentItemRevision;
 import com.teamcenter.rac.kernel.TCComponentItemType;
-import com.teamcenter.rac.kernel.TCComponentRevisionRule;
 import com.teamcenter.rac.kernel.TCException;
 import com.teamcenter.rac.kernel.TCSession;
 import com.teamcenter.rac.util.MessageBox;
@@ -48,11 +44,17 @@ public class CreateCAMDialog extends AbstractAIFDialog implements ActionListener
 
 	TCSession session;
 	
-	public CreateCAMDialog(TCComponentItemRevision processRev) throws TCException {
+	TCComponentBOPLine bop;
+	
+	TCComponentBOPLine top;
+	
+	public CreateCAMDialog(TCComponentBOPLine bop, TCComponentBOPLine top) throws TCException {
 		super(AIFUtility.getActiveDesktop());
 		setTitle("新建数控程序集");
-		this.processRev = processRev;
-		session = processRev.getSession();
+		this.bop = bop;
+		this.top = top;
+		this.processRev = bop.getItemRevision();
+		session = bop.getSession();
 		itemType = (TCComponentItemType) session.getTypeComponent(type);
 		String name = processRev.getProperty("object_name");
 		JPanel propertyPanel = new JPanel();
@@ -106,6 +108,7 @@ public class CreateCAMDialog extends AbstractAIFDialog implements ActionListener
 		pack();
 	}
 	
+
 	@Override
 	public void actionPerformed(ActionEvent event) {
 		Object obj = event.getSource();
@@ -114,15 +117,18 @@ public class CreateCAMDialog extends AbstractAIFDialog implements ActionListener
 				String id = idText.getText();
 				String revID = revText.getText();
 				if (id.isEmpty() || revID.isEmpty()) {
-					MessageBox.post(this, "请指派ID", "提示", MessageBox.INFORMATION);
+					MessageBox.post(this, "请指派ID与版本", "提示", MessageBox.INFORMATION);
 					return;
 				}
 				TCComponentItem process = itemType.create(id, revID, type, nameText.getText(), "", null);
 				TCComponentItemRevision rev = process.getLatestItemRevision();
-				session.getUser().getHomeFolder().add("contents", rev);
-				setSummaryProcess(rev);
+				TCComponentItemRevision topRev = top.getItemRevision();
+				rev.setRelated("IMAN_METarget", topRev.getRelatedComponents("IMAN_METarget"));
+				top.addBOMLine(top, rev, null);
+				top.window().save();
 				processRev.add("AE8_ASSONCMEP", rev);
-				
+				MessageBox.post(this, process + "-创建成功！", "提示", MessageBox.INFORMATION);
+				dispose();
 			} else if (obj.equals(assignButton)) {
 				assign();
 			} else if (obj.equals(closeButton)) {
@@ -133,33 +139,6 @@ public class CreateCAMDialog extends AbstractAIFDialog implements ActionListener
 			e.printStackTrace();
 		}
 		
-	}
-	
-	public void setSummaryProcess(TCComponentItemRevision rev) throws TCException {
-		TCComponentItemRevision topRev = getTopREvision();
-		if (topRev != null) {
-			rev.setRelated("IMAN_METarget", topRev.getRelatedComponents("IMAN_METarget"));
-			TCComponentRevisionRule rule = new TCComponentRevisionRule();//创建规则
-			TCComponentBOMWindowType type = (TCComponentBOMWindowType) session.getTypeComponent("BOPWindow");//获取BOM窗口类型
-			TCComponentBOMWindow window = type.create(rule);//创建一个BOM窗口
-			TCComponentBOMLine topLine = window.setWindowTopLine(topRev.getItem(),topRev,null,null);//设置顶层BOMLine
-			topLine.addBOMLine(topLine, rev, null);
-		}
-		
-	}
-	
-	public TCComponentItemRevision getTopREvision() throws TCException {
-		TCComponent[] topComs = processRev.whereUsed((short) 0);
-		TCComponentItemRevision rev = null;
-		if (topComs != null && topComs.length > 0) {
-			TCComponent topCom = topComs[0];
-			if (topCom instanceof TCComponentItem) {
-				rev = ((TCComponentItem) topCom).getLatestItemRevision();
-			} else if (topCom instanceof TCComponentItemRevision) {
-				rev = (TCComponentItemRevision) topCom;
-			}
-		}
-		return rev;
 	}
 
 	public void assign() throws TCException {
