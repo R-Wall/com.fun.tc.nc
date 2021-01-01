@@ -28,6 +28,14 @@
             name="上传仿真报告"
             id="com.fun.tc.nc.commands.UploadingReport">
       </command>
+            <command
+            name="数控程序确认表目录"
+            id="com.fun.tc.nc.commands.CNCProgramCatalogue">
+      </command>
+       <command
+            name="工艺工装目录"
+            id="com.fun.tc.nc.commands.ToolingCatalogue">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.handlers">
@@ -98,6 +106,28 @@
 			</and>
 			</enabledWhen>            
       </handler>
+       <handler
+            class="com.fun.tc.nc.handlers.ToolingCatalogueHandler"
+            commandId="com.fun.tc.nc.commands.ToolingCatalogue">
+            <enabledWhen>
+			<and>
+				<or>
+               		<reference definitionId="com.teamcenter.rac.cme.mpp.inMainView"/>
+				</or>
+			</and>
+			</enabledWhen>            
+      </handler>
+       <handler
+            class="com.fun.tc.nc.handlers.CNCProgramCatalogueHandler"
+            commandId="com.fun.tc.nc.commands.CNCProgramCatalogue">
+            <enabledWhen>
+			<and>
+				<or>
+               		<reference definitionId="com.teamcenter.rac.cme.mpp.inMainView"/>
+				</or>
+			</and>
+			</enabledWhen>            
+      </handler>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
@@ -134,6 +164,16 @@
             <command
                   commandId="com.fun.tc.nc.commands.ReviseCAE"
                   id="com.fun.tc.nc.commands.ReviseCAE"
+                  mnemonic="S">
+            </command>
+            <command
+                  commandId="com.fun.tc.nc.commands.ToolingCatalogue"
+                  id="com.fun.tc.nc.commands.ToolingCatalogue"
+                  mnemonic="S">
+            </command>
+            <command
+                  commandId="com.fun.tc.nc.commands.CNCProgramCatalogue"
+                  id="com.fun.tc.nc.commands.CNCProgramCatalogue"
                   mnemonic="S">
             </command>
          </menu>
