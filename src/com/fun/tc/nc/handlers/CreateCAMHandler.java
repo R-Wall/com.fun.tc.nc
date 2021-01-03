@@ -9,6 +9,7 @@ import org.eclipse.core.commands.ExecutionException;
 import com.fun.tc.nc.dialogs.CreateCAMDialog;
 import com.teamcenter.rac.aif.kernel.InterfaceAIFComponent;
 import com.teamcenter.rac.aifrcp.AIFUtility;
+import com.teamcenter.rac.kernel.TCComponent;
 import com.teamcenter.rac.kernel.TCComponentBOPLine;
 import com.teamcenter.rac.kernel.TCComponentItemRevision;
 import com.teamcenter.rac.kernel.TCException;
@@ -30,6 +31,13 @@ public class CreateCAMHandler extends AbstractHandler {
 		try {
 			TCComponentBOPLine line = (TCComponentBOPLine)aifCom;
 			TCComponentItemRevision processRev = line.getItemRevision();
+			TCComponent[] coms = processRev.getRelatedComponents("AE8_ASSONCMEP");
+			for (TCComponent obj : coms) {
+				if ("MEProcessRevision".equals(obj.getType())) {
+					MessageBox.post("<" + processRev + ">已关联数控程序集<" + obj+ ">", "提示", MessageBox.INFORMATION);
+					return null;
+				}
+			}
 			if (!"AE8Process Revision".equals(processRev.getType())) {
 				MessageBox.post("请选择机加工艺版本进行操作", "提示", MessageBox.INFORMATION);
 				return null;
@@ -48,4 +56,5 @@ public class CreateCAMHandler extends AbstractHandler {
 		}
 		return null;
 	}
+	
 }

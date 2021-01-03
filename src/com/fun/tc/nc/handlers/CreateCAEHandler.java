@@ -11,6 +11,7 @@ import com.teamcenter.rac.aif.kernel.AIFComponentContext;
 import com.teamcenter.rac.aif.kernel.InterfaceAIFComponent;
 import com.teamcenter.rac.aifrcp.AIFUtility;
 import com.teamcenter.rac.kernel.TCComponent;
+import com.teamcenter.rac.kernel.TCComponentBOMLine;
 import com.teamcenter.rac.kernel.TCComponentBOPLine;
 import com.teamcenter.rac.kernel.TCComponentItem;
 import com.teamcenter.rac.kernel.TCComponentItemRevision;
@@ -33,17 +34,50 @@ public class CreateCAEHandler extends AbstractHandler {
 		try {
 			TCComponentBOPLine line = (TCComponentBOPLine)aifCom;
 			TCComponentItemRevision processRev = line.getItemRevision();
-			if (!"MEProcessRevision".equals(processRev.getType())) {
-				MessageBox.post("请选择数控程序集进行操作", "提示", MessageBox.INFORMATION);
+			if (!"AE8Operation Revision".equals(processRev.getType())) {
+				MessageBox.post("请选择机加工序进行操作", "提示", MessageBox.INFORMATION);
 				return null;
 			}
-			TCComponentItemRevision rev = line.getItemRevision();
-			TCComponentItemRevision relationRev = getRelation(rev);
-			if (relationRev == null) {
-				MessageBox.post("机加工艺下无机加工序", "提示", MessageBox.INFORMATION);
+			TCComponentBOMLine t_line = line.getCachedParent();
+			if (t_line == null) {
+				MessageBox.post("当前机加工序在视图账中无机加工艺！", "提示", MessageBox.INFORMATION);
 				return null;
 			}
-			SwingUtilities.invokeLater(new CreateCAEDialog(line, relationRev));
+			
+			TCComponentItemRevision rev = t_line.getItemRevision();
+			if (!"AE8Process Revision".equals(rev.getType())) {
+				MessageBox.post("当前机加工序父项不是机加工艺！", "提示", MessageBox.INFORMATION);
+				return null;
+			}
+			
+			TCComponent[] refComs = rev.getRelatedComponents("AE8_ASSONCMEP");
+			TCComponentItemRevision process = null;
+			for (TCComponent refCom : refComs) {
+				if ("MEProcessRevision".equals(refCom.getType())) {
+					process = (TCComponentItemRevision) refCom;
+					break;
+				}
+			}
+			if (process == null) {
+				MessageBox.post("请先为" + rev + "创建数控程序集！", "提示", MessageBox.INFORMATION);
+				return null;
+			}
+			TCComponentBOMLine top = t_line.getCachedParent();
+			if (top == null) {
+				MessageBox.post("当前机加工序在视图中无总工艺！", "提示", MessageBox.INFORMATION);
+				return null;
+			}
+			AIFComponentContext[] contents = top.getChildren();
+			TCComponentBOMLine p_line = null;
+			for (AIFComponentContext context : contents) {
+				TCComponentBOMLine bomline = (TCComponentBOMLine) context.getComponent();
+				if (process.equals(bomline.getItemRevision())) {
+					p_line = bomline;
+					break;
+				}
+			}
+			
+			SwingUtilities.invokeLater(new CreateCAEDialog(p_line, processRev));
 		} catch (Exception e) {
 			e.printStackTrace();
 			MessageBox.post(e);

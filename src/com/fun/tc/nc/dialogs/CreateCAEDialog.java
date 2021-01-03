@@ -19,7 +19,7 @@ import javax.swing.JTextField;
 import com.teamcenter.rac.aif.AbstractAIFDialog;
 import com.teamcenter.rac.aifrcp.AIFUtility;
 import com.teamcenter.rac.kernel.TCComponent;
-import com.teamcenter.rac.kernel.TCComponentBOPLine;
+import com.teamcenter.rac.kernel.TCComponentBOMLine;
 import com.teamcenter.rac.kernel.TCComponentDataset;
 import com.teamcenter.rac.kernel.TCComponentForm;
 import com.teamcenter.rac.kernel.TCComponentFormType;
@@ -62,7 +62,7 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 	
 	TCComponentItemType itemType;
 	
-	TCComponentBOPLine line;
+	TCComponentBOMLine line;
 
 	TCSession session;
 	
@@ -83,7 +83,7 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 	List<InterfacePropertyComponent> coms = new ArrayList<>();
 
 	
-	public CreateCAEDialog(TCComponentBOPLine line, TCComponentItemRevision relationRev) throws Exception {
+	public CreateCAEDialog(TCComponentBOMLine line, TCComponentItemRevision relationRev) throws Exception {
 		super(AIFUtility.getActiveDesktop());
 		setTitle("新建数控工序");
 		this.line = line;
