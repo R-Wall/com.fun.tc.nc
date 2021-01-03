@@ -15,3 +15,6 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ClassPath: lib/swing2swt.jar,
  .,
  lib/swt.win32.x86_64_3.8.jar
+Import-Package: org.apache.poi.hssf.model,
+ org.apache.poi.ss.usermodel,
+ org.apache.poi.xssf.usermodel
