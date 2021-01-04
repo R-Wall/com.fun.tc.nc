@@ -3,6 +3,7 @@ package com.fun.tc.nc.until;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.util.List;
 
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFCell;
@@ -12,52 +13,54 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.teamcenter.rac.aifrcp.AIFUtility;
 import com.teamcenter.rac.kernel.TCComponentFolder;
-import com.teamcenter.rac.kernel.TCComponentItemRevision;
-import com.teamcenter.rac.kernel.TCException;
 import com.teamcenter.rac.kernel.TCSession;
-
-
 
 public class MyWriteExcelUntil {
 
-	public static String writeToolingCatalogueExcel(TCComponentItemRevision rev) throws Exception {
+	public static String writeToolingCatalogueExcel(List<String[]>values) throws Exception {
 		
-		String path = "C:\\Temp\\工装明细表.xls";
+		String path = "C:\\Temp\\工装明细表.xlsx";
 		InputStream in = MyWriteExcelUntil.class.getResourceAsStream("/工装明细表.xlsx");
 		Workbook wb = new XSSFWorkbook(in);		
 		XSSFSheet sheet = (XSSFSheet) wb.getSheet("工装明细表");
-		FileOutputStream fileOut;	    	    	    
-	    for (int i = 3; i < 5; i++) {
-    	XSSFRow row = sheet.createRow(i+1);		
-		 for (int j = 0; j < 2; j++) {
-			XSSFCell cell = row.createCell(j);
-		    cell.setCellValue("wall"+j);
+	    for (int i = 0; i < values.size(); i++) {
+	    	XSSFRow row = sheet.createRow(i+3);
+	    	String[] value = values.get(i);
+	    	for (int j = 0; j < value.length; j++) {
+	    		XSSFCell cell = row.getCell(j);
+	    		if (cell == null) {
+	    			cell = row.createCell(j);
+				}
+			    cell.setCellValue(value[j]);
+			}
 		}
-	}
 	    //将数据流程保存到excel
-		fileOut = new FileOutputStream(path);
+	    FileOutputStream fileOut = new FileOutputStream(path);
 		wb.write(fileOut);
 		in.close();
 		fileOut.close();
 		return path;
 	}
 	
-	public static String writeCNCProgramCatalogueExcel(TCComponentItemRevision rev) throws Exception {
+	public static String writeCNCProgramCatalogueExcel(List<String[]>values) throws Exception {
 		
-		String path = "C:\\Temp\\数控程序确认表.xls";
+		String path = "C:\\Temp\\数控程序确认表.xlsx";
 		InputStream in = MyWriteExcelUntil.class.getResourceAsStream("/数控程序确认表.xlsx");
 		Workbook wb = new XSSFWorkbook(in);		
 		XSSFSheet sheet = (XSSFSheet) wb.getSheet("数控程序确认表");
-		FileOutputStream fileOut;	    	    	    
-	    for (int i = 3; i < 5; i++) {
-    	XSSFRow row = sheet.createRow(i+1);		
-		 for (int j = 0; j < 2; j++) {
-			XSSFCell cell = row.createCell(j);
-		    cell.setCellValue("wall"+j);
+		for (int i = 0; i < values.size(); i++) {
+	    	XSSFRow row = sheet.createRow(i+3);
+	    	String[] value = values.get(i);
+	    	for (int j = 0; j < value.length; j++) {
+	    		XSSFCell cell = row.getCell(j);
+	    		if (cell == null) {
+	    			cell = row.createCell(j);
+				}
+			    cell.setCellValue(value[j]);
+			}
 		}
-	}
 	    //将数据流程保存到excel
-		fileOut = new FileOutputStream(path);
+		FileOutputStream fileOut = new FileOutputStream(path);
 		wb.write(fileOut);
 		in.close();
 		fileOut.close();	
