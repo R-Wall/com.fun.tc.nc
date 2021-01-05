@@ -2,6 +2,7 @@ package com.fun.tc.nc.dialogs;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ import com.teamcenter.rac.kernel.TCProperty;
 import com.teamcenter.rac.kernel.TCPropertyDescriptor;
 import com.teamcenter.rac.kernel.TCSession;
 import com.teamcenter.rac.stylesheet.InterfacePropertyComponent;
+import com.teamcenter.rac.stylesheet.PropertyLOVDisplayer;
 import com.teamcenter.rac.stylesheet.PropertyNameLabel;
 import com.teamcenter.rac.stylesheet.PropertyTextField;
 import com.teamcenter.rac.util.MessageBox;
@@ -213,17 +215,25 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 		
 		int row = 1;
 		for (String formPro : formPros) {
-			PropertyNameLabel lable = new PropertyNameLabel();
 			TCPropertyDescriptor desc = masterType.getPropDesc(formPro);
+			if (desc == null) {
+				System.out.println(masterType.getType() + " 表单中没有属性：" + formPro);
+				continue;
+			}
+			PropertyNameLabel lable = new PropertyNameLabel();
 			lable.load(desc);
-			
-			PropertyTextField textField = new PropertyTextField();
-			textField.load(desc);
-			textField.setProperty(formPro);
+			InterfacePropertyComponent com = null;
+			if (desc.hasLOVAttached()) {
+				com = new PropertyLOVDisplayer();
+			} else {
+				com =  new PropertyTextField();
+			}
+			com.load(desc);
+			com.setProperty(formPro);
 			machiningPanel.add(row + ".1.center.center", lable);
-			machiningPanel.add(row + ".2.center.center", textField);
+			machiningPanel.add(row + ".2.center.center", (Component) com);
 			machiningPanel.add(row + ".3.center.center", new JLabel("   "));
-			coms.add(textField);
+			coms.add(com);
 			row++;
 		}
 		return machiningPanel;
@@ -239,8 +249,12 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 		if (form != null) {
 			int row = 1;
 			for (String formPro : relationFormPros) {
-				PropertyNameLabel lable = new PropertyNameLabel();
 				TCProperty tcp = form.getTCProperty(formPro);
+				if (tcp == null) {
+					System.out.println(form.getType() + " 表单中没有属性：" + formPro);
+					continue;
+				}
+				PropertyNameLabel lable = new PropertyNameLabel();
 				lable.load(tcp);
 				
 				PropertyTextField textField = new PropertyTextField();
