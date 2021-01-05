@@ -76,7 +76,10 @@ public class CreateCAEHandler extends AbstractHandler {
 					break;
 				}
 			}
-			
+			if(p_line == null) {
+				MessageBox.post("(" + rev + "）关联数控（"+ process + "）不在当前视图中！", "提示", MessageBox.INFORMATION);
+				return null;
+			}
 			SwingUtilities.invokeLater(new CreateCAEDialog(p_line, processRev));
 		} catch (Exception e) {
 			e.printStackTrace();
