@@ -502,9 +502,17 @@ public class CreateCAEDialog extends AbstractAIFDialog implements ActionListener
 	}
 	
 	public void syncDeviceValue(TCComponent com) throws TCException {
-		TCComponent form = com.getRelatedComponent("IMAN_master_form_rev");
-		jc_name.setText(com.getProperty("item_id"));
-		sb_no.setText(form.getProperty("ae8device_no"));
-		os.setText(form.getProperty("ae8control_type"));
+		String id = "";
+		String no = "";
+		String type = "";
+		if (com != null) {
+			TCComponent form = com.getRelatedComponent("IMAN_master_form_rev");
+			id = com.getProperty("item_id");
+			no = form.getProperty("ae8device_no");
+			type = form.getProperty("ae8control_type");
+		}
+		jc_name.setText(id);
+		sb_no.setText(no);
+		os.setText(type);
 	}
 }
