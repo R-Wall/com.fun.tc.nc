@@ -13,7 +13,6 @@ import com.teamcenter.rac.aif.kernel.InterfaceAIFComponent;
 import com.teamcenter.rac.aifrcp.AIFUtility;
 import com.teamcenter.rac.kernel.TCComponent;
 import com.teamcenter.rac.kernel.TCComponentBOPLine;
-import com.teamcenter.rac.kernel.TCComponentForm;
 import com.teamcenter.rac.kernel.TCComponentItemRevision;
 import com.teamcenter.rac.kernel.TCException;
 import com.teamcenter.rac.util.MessageBox;
@@ -34,7 +33,7 @@ public class ToolingCatalogueHandler extends AbstractHandler{
 			
 			String path = MyWriteExcelUntil.writeToolingCatalogueExcel(getValues(comp));
 			MyWriteExcelUntil.addToNewStuff(path);
-			MessageBox.post("报表输出成功！","提示",MessageBox.INFORMATION);
+			MessageBox.post(aifcomp  + "报表输出成功！","提示",MessageBox.INFORMATION);
 		} catch (Exception e) {
 			MessageBox.post(e);
 			e.printStackTrace();
@@ -54,7 +53,22 @@ public class ToolingCatalogueHandler extends AbstractHandler{
 					TCComponentBOPLine orb = (TCComponentBOPLine) or.getComponent();
 					TCComponentItemRevision or_rev = orb.getItemRevision();
 					if ("AE8Tool Revision".equals(or_rev.getType())) {
-						revs.add(or_rev);
+						if (!revs.contains(or_rev)) {
+							revs.add(or_rev);
+						}
+					}
+				}
+				TCComponent[] mrs = rev.getRelatedComponents("AE8RelNC");
+				for (TCComponent mr : mrs) {
+					if ("MENCMachining Revision".equals(mr.getType())) {
+						TCComponent[] mrvis = mr.getRelatedComponents("ps_children");
+						for (TCComponent mrvi : mrvis) {
+							if ("AE8Tool Revision".equals(mrvi.getType())) {
+								if (!revs.contains(mrvi)) {
+									revs.add((TCComponentItemRevision) mrvi);
+								}
+							}
+						}
 					}
 				}
 			}
@@ -71,15 +85,24 @@ public class ToolingCatalogueHandler extends AbstractHandler{
 				continue;
 			}
 			String[] value = new String[11];
+			String gz_type = form.getProperty("ae8gz_type");
+			String gz_id = rev.getProperty("item_id");
 			value[0] = ++num + "";
-			value[1] = rev.getProperty("item_id");
+			value[1] = form.getProperty("ae8part_no");
 			value[2] = form.getProperty("ae8gx_no");
-			value[3] = "";
-			value[4] = "";
-			value[5] = "";
-			value[6] = "";
+			if ("夹具".equals(gz_type)) {
+				value[3] =gz_id;
+			} else if ("刀具".equals(gz_type)) {
+				value[4] = gz_id;
+			} else if ("量具".equals(gz_type)) {
+				value[5] = gz_id;
+			}else if ("模具".equals(gz_type)) {
+				value[6] = gz_id;
+			} else {
+				continue;
+			}
 			value[7] = "";
-			value[8] = "";
+			value[8] = rev.getProperty("object_name");
 			value[9] = "";
 			value[10] = "";
 			values.add(value);

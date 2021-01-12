@@ -35,7 +35,6 @@ import com.teamcenter.rac.kernel.TCProperty;
 import com.teamcenter.rac.kernel.TCPropertyDescriptor;
 import com.teamcenter.rac.kernel.TCSession;
 import com.teamcenter.rac.stylesheet.InterfacePropertyComponent;
-import com.teamcenter.rac.stylesheet.PropertyLOVDisplayer;
 import com.teamcenter.rac.stylesheet.PropertyNameLabel;
 import com.teamcenter.rac.stylesheet.PropertyTextField;
 import com.teamcenter.rac.util.MessageBox;
