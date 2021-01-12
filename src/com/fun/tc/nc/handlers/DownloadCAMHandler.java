@@ -10,11 +10,13 @@ import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
+import com.fun.tc.nc.until.MyDatasetUtil;
 import com.fun.tc.nc.until.RacDatasetUtil;
 import com.teamcenter.rac.aif.kernel.InterfaceAIFComponent;
 import com.teamcenter.rac.aifrcp.AIFUtility;
 import com.teamcenter.rac.kernel.TCComponentBOPLine;
 import com.teamcenter.rac.kernel.TCComponentDataset;
+import com.teamcenter.rac.kernel.TCComponentItemRevision;
 import com.teamcenter.rac.util.MessageBox;
 
 public class DownloadCAMHandler extends AbstractHandler{
@@ -27,20 +29,17 @@ public class DownloadCAMHandler extends AbstractHandler{
 			InterfaceAIFComponent aifcomp = AIFUtility.getCurrentApplication().getTargetComponent();
 			
 			TCComponentBOPLine comp  = (TCComponentBOPLine) aifcomp;
-			
-			String type = comp.getItemRevision().getType();
+			TCComponentItemRevision rev = comp.getItemRevision();
+			String type = rev.getType();
 			
 			if(type.equals("MENCMachining Revision")) {	
 				Display display = Display.getDefault();	
 				parent = new Shell(display,SWT.SHELL_TRIM);
 				String dir = showSelectFileDialog();
-					List<TCComponentDataset> datasets = RacDatasetUtil.getDatasets(comp.getItemRevision());
-					for (int i = 0; i < datasets.size(); i++) {
-						String temp = datasets.get(i).toString();
-						if(temp.endsWith(".MPF")||temp.endsWith(".mpf")) {
-							RacDatasetUtil.getTCFile(datasets.get(i), dir);
-						}
-					}
+				List<TCComponentDataset> datasets = MyDatasetUtil.getDatesetByMENCMachining(rev);
+				for (int i = 0; i < datasets.size(); i++) {
+					RacDatasetUtil.getTCFile(datasets.get(i), dir);
+				}
 					
 				MessageBox.post("下载完成!请在选择的路径下查看。","提示",MessageBox.INFORMATION);
 			}else {

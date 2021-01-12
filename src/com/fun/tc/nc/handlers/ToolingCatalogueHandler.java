@@ -13,6 +13,7 @@ import com.teamcenter.rac.aif.kernel.InterfaceAIFComponent;
 import com.teamcenter.rac.aifrcp.AIFUtility;
 import com.teamcenter.rac.kernel.TCComponent;
 import com.teamcenter.rac.kernel.TCComponentBOPLine;
+import com.teamcenter.rac.kernel.TCComponentForm;
 import com.teamcenter.rac.kernel.TCComponentItemRevision;
 import com.teamcenter.rac.kernel.TCException;
 import com.teamcenter.rac.util.MessageBox;
@@ -26,8 +27,8 @@ public class ToolingCatalogueHandler extends AbstractHandler{
 			TCComponentBOPLine comp  = (TCComponentBOPLine) aifcomp;
 			TCComponentItemRevision rev = comp.getItemRevision();
 			String type = rev.getType();
-			if (!type.equals("MEProcessRevision") && !type.equals("MENCMachining Revision")) {
-				MessageBox.post("请选择数控程序集或数控工序进行操作", "提示", MessageBox.INFORMATION);
+			if (!type.equals("AE8Process Revision")) {
+				MessageBox.post("请选机加工艺进行操作", "提示", MessageBox.INFORMATION);
 				return null;
 			}
 			
@@ -42,55 +43,47 @@ public class ToolingCatalogueHandler extends AbstractHandler{
 	}
 	
 	public List<String[]> getValues(TCComponentBOPLine line) throws TCException{
-		TCComponentItemRevision rev = line.getItemRevision();
-		String type = rev.getType();
-		List<TCComponentBOPLine> bops = new ArrayList<>();
-		if (type.equals("MEProcessRevision")) {
-			AIFComponentContext[] contexts = line.getChildren();
-			for (AIFComponentContext context : contexts) {
-				TCComponentBOPLine bopLine = (TCComponentBOPLine) context.getComponent();
-				if (bopLine.getItemRevision().getType().equals("MENCMachining Revision")) {
-					bops.add(bopLine);
+		AIFComponentContext[] contexts = line.getChildren();
+		List<TCComponentItemRevision> revs = new ArrayList<>();
+		for (AIFComponentContext context : contexts) {
+			TCComponentBOPLine bopLine = (TCComponentBOPLine) context.getComponent();
+			TCComponentItemRevision rev = bopLine.getItemRevision();
+			if ("AE8Operation Revision".equals(rev.getType())) {
+				AIFComponentContext[] ors = bopLine.getChildren();
+				for (AIFComponentContext or : ors) {
+					TCComponentBOPLine orb = (TCComponentBOPLine) or.getComponent();
+					TCComponentItemRevision or_rev = orb.getItemRevision();
+					if ("AE8Tool Revision".equals(or_rev.getType())) {
+						revs.add(or_rev);
+					}
 				}
 			}
-		} else if (type.equals("MENCMachining Revision")) {
-			bops.add(line);
 		}
-		return getValues(bops);
+		return getValue(revs);
 	}
 
-	public List<String[]> getValues(List<TCComponentBOPLine> bops) throws TCException{
+	public List<String[]> getValue(List<TCComponentItemRevision> revs) throws TCException{
 		List<String[]> values = new ArrayList<String[]>();
 		int num = 0;
-		for (int i = 0; i < bops.size(); i++) {
-			TCComponentBOPLine bop = bops.get(i);
-			TCComponentItemRevision topRev = bop.getItemRevision();
-			AIFComponentContext[] contexts = bop.getChildren();
-			for (AIFComponentContext context : contexts) {
-				TCComponentBOPLine bopLine = (TCComponentBOPLine) context.getComponent();
-				TCComponentItemRevision rev = bopLine.getItemRevision();
-				if (rev.getType().equals("AE8Tool Revision")) {
-					TCComponent form = rev.getRelatedComponent("IMAN_master_form_rev");
-					if (form == null) {
-						continue;
-					}
-					String[] value = new String[11];
-					value[0] = ++num + "";
-					value[1] = topRev.toDisplayString();
-					value[2] = form.getProperty("ae8gx_no");
-					value[3] = "";
-					value[4] = "";
-					value[5] = "";
-					value[6] = "";
-					value[7] = "";
-					value[8] = "";
-					value[9] = "";
-					value[10] = "";
-					values.add(value);
-				}
+		for (TCComponentItemRevision rev : revs) {
+			TCComponent form = rev.getRelatedComponent("IMAN_master_form_rev");
+			if (form == null) {
+				continue;
 			}
+			String[] value = new String[11];
+			value[0] = ++num + "";
+			value[1] = rev.getProperty("item_id");
+			value[2] = form.getProperty("ae8gx_no");
+			value[3] = "";
+			value[4] = "";
+			value[5] = "";
+			value[6] = "";
+			value[7] = "";
+			value[8] = "";
+			value[9] = "";
+			value[10] = "";
+			values.add(value);
 		}
 		return values;
 	}
-	
 }

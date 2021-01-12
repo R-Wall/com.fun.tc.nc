@@ -26,7 +26,7 @@ public class UploadingReportHandler extends AbstractHandler{
 			InterfaceAIFComponent aifcomp = AIFUtility.getCurrentApplication().getTargetComponent();
 			
 			TCComponentBOPLine comp  = (TCComponentBOPLine) aifcomp;
-			TCComponentItemRevision rev = comp.getItemRevision();
+			final TCComponentItemRevision rev = comp.getItemRevision();
 			String type = rev.getType();
 			if(type.equals("MENCMachining Revision")) {			 
 				Display display = Display.getDefault();
@@ -38,11 +38,21 @@ public class UploadingReportHandler extends AbstractHandler{
 				final String file = fd.open();
 				final String name = fd.getFileName();
 				final File files = new File(file);
-				String ref_name = rev.getDefaultPasteRelation();
 				if(name.contains("仿真报告.")) {
 					if(file!=null){
-						MyDatasetUtil.createDateset(rev, name, files, ref_name);
-						MessageBox.post("仿真报告上传成功","提示",MessageBox.INFORMATION);
+						new Thread(new Runnable() {
+							
+							@Override
+							public void run() {
+								try {
+									MyDatasetUtil.createDatesetByMENCMachining(rev, name, files);
+								} catch (Exception e) {
+									MessageBox.post(e);
+									e.printStackTrace();
+								}
+							}
+						}).start();
+						
 					}else{
 						MessageBox.post("上传文件路径为空","提示",MessageBox.INFORMATION);
 					}
