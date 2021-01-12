@@ -35,27 +35,15 @@ public class MyDatasetUtil {
 	 */
 
 	public static void createDateset(TCComponent tcc, String name, File file, String ref_name) throws Exception{
-		if (ref_name!= null) {
-			TCComponent[] coms = tcc.getRelatedComponents(ref_name);
-			boolean flag = true;
-			for (TCComponent com : coms) {
-				if (com instanceof TCComponentDataset) {
-					if (name.equals(com.getProperty("object_name"))) {
-						flag = false;
-						break;
-					}
-				}
-			}
-			if (flag) {
-				String fileType = getFileType(file);
-				String ref = getrefType(fileType);
-				TCComponentDatasetType type = (TCComponentDatasetType) tcc.getSession().getTypeService().getTypeComponent("Dataset");
-				TCComponentDataset dataset = type.create(name, "", fileType);
-				String[] refs = new String[] { ref };
-				String[] files = new String[] { file.getAbsolutePath() };
-				dataset.setFiles(files, refs);
-				tcc.add(ref_name, dataset);
-			}
+		String fileType = getFileType(file);
+		String ref = getrefType(fileType);
+		TCComponentDatasetType type = (TCComponentDatasetType) tcc.getSession().getTypeService().getTypeComponent("Dataset");
+		TCComponentDataset dataset = type.create(name, "", fileType);
+		String[] refs = new String[] { ref };
+		String[] files = new String[] { file.getAbsolutePath() };
+		dataset.setFiles(files, refs);
+		if (ref_name != null && !ref_name.isEmpty()) {
+			tcc.add(ref_name, dataset);
 		}
 	}
 	
