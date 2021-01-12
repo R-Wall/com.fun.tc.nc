@@ -26,8 +26,8 @@ public class CNCProgramCatalogueHandler extends AbstractHandler{
 			TCComponentBOPLine comp  = (TCComponentBOPLine) aifcomp;
 			TCComponentItemRevision rev = comp.getItemRevision();
 			String type = rev.getType();
-			if (!type.equals("MEProcessRevision") && !type.equals("AE8RootProcess Revision")) {
-				MessageBox.post("请选择总工艺或数控程序集进行操作", "提示", MessageBox.INFORMATION);
+			if (!type.equals("MEProcessRevision")) {
+				MessageBox.post("请选择数控程序集进行操作", "提示", MessageBox.INFORMATION);
 				return null;
 			}
 			String path = MyWriteExcelUntil.writeCNCProgramCatalogueExcel(getValues(comp));
@@ -42,47 +42,34 @@ public class CNCProgramCatalogueHandler extends AbstractHandler{
 	
 	public List<String[]> getValues(TCComponentBOPLine line) throws TCException{
 		TCComponentItemRevision rev = line.getItemRevision();
-		String type = rev.getType();
-		List<TCComponentItemRevision> revs = new ArrayList<>();
-		if (type.equals("AE8RootProcess Revision")) {
-			AIFComponentContext[] contexts = line.getChildren();
-			for (AIFComponentContext context : contexts) {
-				TCComponentBOPLine bopLine = (TCComponentBOPLine) context.getComponent();
-				rev = bopLine.getItemRevision();
-				if (bopLine.getItemRevision().getType().equals("MEProcessRevision")) {
-					revs.add(rev);
-				}
-			}
-		} else if (type.equals("MEProcessRevision")) {
-			
-			revs.add(rev);
-		}
-		
-		return getValues(revs);
-	}
-
-	public List<String[]> getValues(List<TCComponentItemRevision> revs) throws TCException{
+		AIFComponentContext[] contexts = line.getChildren();
 		List<String[]> values = new ArrayList<String[]>();
 		int num = 0;
-		for (int i = 0; i < revs.size(); i++) {
-			TCComponentItemRevision rev = revs.get(i);
+		for (AIFComponentContext context : contexts) {
+			TCComponentBOPLine bopLine = (TCComponentBOPLine) context.getComponent();
+			rev = bopLine.getItemRevision();
 			TCComponent form = rev.getRelatedComponent("IMAN_master_form_rev");
 			if (form == null) {
 				continue;
 			}
+			String state = form.getProperty("ae8cx_state");
+			if (!state.equalsIgnoreCase("D")) {
+				continue;
+			}
 			String[] value = new String[10];
 			value[0] = ++num + "";
-			value[1] = form.getProperty("ae8_att1");
-			value[2] = form.getProperty("ae8_att4");
-			value[3] = "";
-			value[4] = "";
-			value[5] = "";
-			value[6] = "";
-			value[7] = "";
-			value[8] = "";
-			value[9] = "";
+			value[1] = form.getProperty("ae8cx_no");
+			value[2] = state;
+			value[3] = rev.getProperty("item_revision");
+			value[4] = form.getProperty("ae8qrb_no");
+			value[5] = form.getProperty("date_released");
+			value[6] = form.getProperty("ae8part_no");
+			value[7] = form.getProperty("ae8gf_rev");
+			value[8] = form.getProperty("ae8gx_no");
+			value[9] = form.getProperty("ae8memo");
 			values.add(value);
 		}
+		
 		return values;
 	}
 

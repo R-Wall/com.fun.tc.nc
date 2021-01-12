@@ -1,11 +1,25 @@
 package com.fun.tc.nc.until;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
+import javax.swing.JOptionPane;
+
+import com.motey.transformer.Main;
+import com.motey.transformer.command.Signer;
+import com.teamcenter.rac.aifrcp.AIFUtility;
 import com.teamcenter.rac.kernel.TCComponent;
 import com.teamcenter.rac.kernel.TCComponentDataset;
 import com.teamcenter.rac.kernel.TCComponentDatasetType;
+import com.teamcenter.rac.kernel.TCComponentFolderType;
 import com.teamcenter.rac.kernel.TCException;
+import com.teamcenter.rac.kernel.TCSession;
 
 public class MyDatasetUtil {
 
@@ -43,7 +57,106 @@ public class MyDatasetUtil {
 				tcc.add(ref_name, dataset);
 			}
 		}
+	}
+	
+	public static TCComponentDataset createDateset(TCComponent tcc, String name, File file) throws Exception{
+		String fileType = getFileType(file);
+		String ref = getrefType(fileType);
+		TCComponentDatasetType type = (TCComponentDatasetType) tcc.getSession().getTypeService().getTypeComponent("Dataset");
+		TCComponentDataset dataset = type.create(name, "", fileType);
+		String[] refs = new String[] { ref };
+		String[] files = new String[] { file.getAbsolutePath() };
+		dataset.setFiles(files, refs);
+		return dataset;
+	}
+	
+	public static void createDatesetByMENCMachining(TCComponent tcc, String name, File file) throws Exception {
 		
+		TCComponent activity = tcc.getRelatedComponent("root_activity");
+		TCComponent program = activity.getRelatedComponent("contents");
+		String program_name = tcc.getProperty("item_id");
+		if (program == null) {
+			TCSession session = tcc.getSession();
+			TCComponentFolderType folderType = (TCComponentFolderType) session.getTypeComponent("MENCProgram");
+			program = folderType.create(program_name, "MENCProgram", "MENCProgram");
+			activity.add("contents", program);
+		}
+		TCComponent[] coms = program.getRelatedComponents("contents");
+		for (TCComponent com : coms) {
+			if (com instanceof TCComponentDataset) {
+				if (name.equals(com.getProperty("object_name"))) {
+					int choice = JOptionPane.showConfirmDialog(AIFUtility.getActiveDesktop(), "上传的数据集( " + name + " )已存在，是否需要覆盖旧数据?", "提示", JOptionPane.YES_NO_OPTION);
+					if (choice == 0) {
+						TCComponentDataset dataset = createDateset(tcc, name, file);
+						program.add("contents", dataset);
+						program.remove("contents", com);
+					}
+				}
+			}
+		}
+	}
+	
+	public static List<TCComponentDataset> getDatesetByMENCMachining(TCComponent tcc) throws TCException{
+		List<TCComponentDataset> datasets = new ArrayList<TCComponentDataset>();
+		TCComponent activity = tcc.getRelatedComponent("root_activity");
+		TCComponent[] programs = activity.getRelatedComponents("contents");
+		if (programs != null && programs.length > 0) {
+			for (TCComponent program : programs) {
+				TCComponent[] coms = program.getRelatedComponents("contents");
+				if (coms != null) {
+					for (TCComponent com : coms) {
+						String name = com.toString();
+						if (com instanceof TCComponentDataset && (name.endsWith(".MPF") || name.endsWith(".mpf"))) {
+							datasets.add((TCComponentDataset)com);
+						}
+					}
+				}
+			}
+		}
+		return datasets;
+	}
+	
+	public static void sign(TCComponentDataset dataset, Map<String, String> values) throws Exception {
+		String[] args = new String[3];
+		TCFileUtil util = new TCFileUtil(dataset);
+		args[0] = "-command=Signer";
+		args[1] = "-doc=" + util.getFile();
+		args[2] = "-info=" + getTextPath(values);
+//		Main.main(args);
+		new Signer().execute(args);
+		util.updateFile();
+	}
+	
+	public static String getTextPath(Map<String, String> values) throws IOException {
+		File file = new File(System.getProperty("user.home") + File.separator + "info.txt");
+		StringBuilder sb = new StringBuilder();
+		for (String key : values.keySet()) {
+			String value = values.get(key);
+			if (key.isEmpty() || value.isEmpty()) {
+				continue;
+			}
+			sb.append(key + "=" + value + "\n");
+		}
+		
+		FileOutputStream fos = null;
+		PrintWriter pw = null;
+		try {
+			fos = new FileOutputStream(file);
+			pw = new PrintWriter(fos);
+			pw.write(sb.toString().toCharArray());
+			pw.flush();
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (pw != null) {
+				pw.close();
+			}
+			if (fos != null) {
+				fos.close();
+			}
+		}
+		return file.getAbsolutePath();
 	}
 
 	/**
